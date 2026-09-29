@@ -8,8 +8,9 @@ import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.enums.ProductStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class ProductRequest {
+public class ProductRequest extends ModelBase {
 
     @NotBlank(message = "Product name is required")
     @Size(max = 255, message = "Product name must not exceed 255 characters")

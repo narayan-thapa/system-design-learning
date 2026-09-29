@@ -12,11 +12,12 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.enums.OrderStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
 @Entity
 @Table(name = "orders")
 @IdClass(OrderId.class)
-public class Order {
+public class Order extends ModelBase {
 
     @Id
     @Column(name = "id", nullable = false)

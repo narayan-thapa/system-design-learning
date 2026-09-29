@@ -7,8 +7,9 @@ import java.util.List;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.Order;
 import np.com.thapanarayan.ecommerce.domain.enums.OrderStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class OrderResponse {
+public class OrderResponse extends ModelBase {
 
     private UUID id;
     private UUID userId;

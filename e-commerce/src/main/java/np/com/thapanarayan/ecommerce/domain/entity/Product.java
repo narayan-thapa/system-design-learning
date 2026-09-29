@@ -11,10 +11,11 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.enums.ProductStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
 @Entity
 @Table(name = "products")
-public class Product {
+public class Product extends ModelBase {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)

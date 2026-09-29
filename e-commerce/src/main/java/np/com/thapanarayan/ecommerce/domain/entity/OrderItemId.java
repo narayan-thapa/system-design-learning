@@ -1,10 +1,10 @@
 package np.com.thapanarayan.ecommerce.domain.entity;
 
-import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class OrderItemId implements Serializable {
+public class OrderItemId extends ModelBase {
 
     private UUID id;
     private UUID userId;

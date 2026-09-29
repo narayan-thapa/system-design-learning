@@ -5,8 +5,9 @@ import java.time.Instant;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.Product;
 import np.com.thapanarayan.ecommerce.domain.enums.ProductStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class ProductResponse {
+public class ProductResponse extends ModelBase {
 
     private UUID id;
     private String name;

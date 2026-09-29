@@ -3,8 +3,9 @@ package np.com.thapanarayan.ecommerce.dto.request;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class AddToCartRequest {
+public class AddToCartRequest extends ModelBase {
 
     @NotNull(message = "Product ID is required")
     private UUID productId;

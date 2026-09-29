@@ -3,8 +3,9 @@ package np.com.thapanarayan.ecommerce.dto.response;
 import java.math.BigDecimal;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.CartItem;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class CartItemResponse {
+public class CartItemResponse extends ModelBase {
 
     private UUID id;
     private UUID cartId;

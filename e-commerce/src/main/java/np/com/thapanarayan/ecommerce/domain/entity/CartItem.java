@@ -9,11 +9,12 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
 @Entity
 @Table(name = "cart_items")
 @IdClass(CartItemId.class)
-public class CartItem {
+public class CartItem extends ModelBase {
 
     @Id
     @Column(name = "id", nullable = false)

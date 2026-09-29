@@ -13,11 +13,12 @@ import java.util.Objects;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.enums.PaymentMethod;
 import np.com.thapanarayan.ecommerce.domain.enums.PaymentStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
 @Entity
 @Table(name = "payments")
 @IdClass(PaymentId.class)
-public class Payment {
+public class Payment extends ModelBase {
 
     @Id
     @Column(name = "id", nullable = false)

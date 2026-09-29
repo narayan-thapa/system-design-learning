@@ -10,10 +10,11 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.enums.UserRole;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class User extends ModelBase {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)

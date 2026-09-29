@@ -3,8 +3,9 @@ package np.com.thapanarayan.ecommerce.dto.response;
 import java.math.BigDecimal;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.OrderItem;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class OrderItemResponse {
+public class OrderItemResponse extends ModelBase {
 
     private UUID id;
     private UUID productId;

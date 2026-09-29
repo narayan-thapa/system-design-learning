@@ -6,8 +6,9 @@ import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.Payment;
 import np.com.thapanarayan.ecommerce.domain.enums.PaymentMethod;
 import np.com.thapanarayan.ecommerce.domain.enums.PaymentStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class PaymentResponse {
+public class PaymentResponse extends ModelBase {
 
     private UUID id;
     private UUID userId;

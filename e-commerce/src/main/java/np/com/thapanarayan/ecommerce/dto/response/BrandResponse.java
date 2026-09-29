@@ -3,8 +3,9 @@ package np.com.thapanarayan.ecommerce.dto.response;
 import java.time.Instant;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.Brand;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class BrandResponse {
+public class BrandResponse extends ModelBase {
 
     private UUID id;
     private String name;

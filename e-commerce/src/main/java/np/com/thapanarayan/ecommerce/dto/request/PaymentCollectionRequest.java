@@ -1,6 +1,8 @@
 package np.com.thapanarayan.ecommerce.dto.request;
 
-public class PaymentCollectionRequest {
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
+
+public class PaymentCollectionRequest extends ModelBase {
 
     private String transactionReference;
     private String notes;

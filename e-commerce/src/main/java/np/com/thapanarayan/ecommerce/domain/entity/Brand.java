@@ -7,10 +7,11 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
 @Entity
 @Table(name = "brands")
-public class Brand {
+public class Brand extends ModelBase {
 
     @Id
     @Column(name = "id", nullable = false, updatable = false)

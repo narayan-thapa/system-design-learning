@@ -4,8 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.enums.PaymentMethod;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class CheckoutRequest {
+public class CheckoutRequest extends ModelBase {
 
     @NotNull(message = "User ID is required")
     private UUID userId;

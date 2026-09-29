@@ -2,8 +2,9 @@ package np.com.thapanarayan.ecommerce.dto.response;
 
 import java.time.Instant;
 import java.util.List;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class ErrorResponse {
+public class ErrorResponse extends ModelBase {
     private int status;
     private String error;
     private String message;

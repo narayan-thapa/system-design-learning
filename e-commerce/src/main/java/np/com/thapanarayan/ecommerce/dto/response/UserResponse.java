@@ -4,8 +4,9 @@ import java.time.Instant;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.User;
 import np.com.thapanarayan.ecommerce.domain.enums.UserRole;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class UserResponse {
+public class UserResponse extends ModelBase {
 
     private UUID id;
     private String email;

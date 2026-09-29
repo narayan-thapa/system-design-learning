@@ -1,8 +1,9 @@
 package np.com.thapanarayan.ecommerce.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class UserUpdateRequest {
+public class UserUpdateRequest extends ModelBase {
 
     @NotBlank(message = "First name is required")
     private String firstName;

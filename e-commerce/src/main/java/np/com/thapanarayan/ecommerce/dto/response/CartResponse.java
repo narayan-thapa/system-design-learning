@@ -6,8 +6,9 @@ import java.util.List;
 import java.util.UUID;
 import np.com.thapanarayan.ecommerce.domain.entity.Cart;
 import np.com.thapanarayan.ecommerce.domain.enums.CartStatus;
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
 
-public class CartResponse {
+public class CartResponse extends ModelBase {
 
     private UUID id;
     private UUID userId;

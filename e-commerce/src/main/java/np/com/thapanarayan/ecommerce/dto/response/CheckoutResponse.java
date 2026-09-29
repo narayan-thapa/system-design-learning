@@ -1,6 +1,8 @@
 package np.com.thapanarayan.ecommerce.dto.response;
 
-public class CheckoutResponse {
+import np.com.thapanarayan.ecommerce.dto.ModelBase;
+
+public class CheckoutResponse extends ModelBase {
 
     private OrderResponse order;
     private PaymentResponse payment;
