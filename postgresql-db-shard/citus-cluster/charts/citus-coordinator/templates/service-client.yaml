@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-citus-coordinator
+  labels:
+    app.kubernetes.io/name: citus-coordinator
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    citus.role: coordinator
+spec:
+  type: {{ .Values.service.type | default "ClusterIP" }}
+  ports:
+    - name: postgresql
+      port: {{ .Values.service.port | default 5432 }}
+      targetPort: postgresql
+  selector:
+    app.kubernetes.io/name: citus-coordinator
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    citus.role: coordinator

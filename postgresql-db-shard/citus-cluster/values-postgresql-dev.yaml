@@ -1,0 +1,34 @@
+# Specific override values for 'postgresql-dev' namespace on OpenShift
+
+global:
+  namespace: postgresql-dev
+  postgresql:
+    username: postgres
+    password: "DevSecurePassword2026!"
+    database: postgres
+    port: 5432
+  serviceAccount:
+    create: true
+    name: citus-sa
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    runAsUser: 999
+    runAsGroup: 999
+  podSecurityContext:
+    fsGroup: 999
+
+citus-coordinator:
+  replicaCount: 1
+  persistence:
+    enabled: true
+    size: 10Gi
+
+citus-worker:
+  # Exactly 3 worker nodes / shards
+  replicaCount: 3
+  persistence:
+    enabled: true
+    size: 20Gi

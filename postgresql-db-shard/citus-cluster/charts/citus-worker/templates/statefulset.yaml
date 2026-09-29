@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-citus-worker
+  labels:
+    app.kubernetes.io/name: citus-worker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    citus.role: worker
+spec:
+  serviceName: {{ .Release.Name }}-citus-worker-hl
+  replicas: {{ .Values.replicaCount | default 3 }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: citus-worker
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      citus.role: worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: citus-worker
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        citus.role: worker
+    spec:
+      serviceAccountName: {{ if and .Values.global (and .Values.global.serviceAccount .Values.global.serviceAccount.name) }}{{ .Values.global.serviceAccount.name }}{{ else if .Values.serviceAccount.name }}{{ .Values.serviceAccount.name }}{{ else }}citus-sa{{ end }}
+      {{- with or .Values.podSecurityContext (and .Values.global .Values.global.podSecurityContext) }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: postgresql
+          image: "{{ or (and .Values.global (and .Values.global.image .Values.global.image.repository)) .Values.image.repository }}:{{ or (and .Values.global (and .Values.global.image .Values.global.image.tag)) .Values.image.tag }}"
+          imagePullPolicy: {{ or (and .Values.global (and .Values.global.image .Values.global.image.pullPolicy)) .Values.image.pullPolicy | default "IfNotPresent" }}
+          {{- with or .Values.securityContext (and .Values.global .Values.global.securityContext) }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: postgresql
+              containerPort: {{ default 5432 (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.port)) }}
+              protocol: TCP
+          env:
+            - name: POSTGRES_USER
+              value: {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.username)) | quote }}
+            - name: POSTGRES_DB
+              value: {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.database)) | quote }}
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ if and .Values.global (and .Values.global.postgresql .Values.global.postgresql.existingSecret) }}{{ .Values.global.postgresql.existingSecret }}{{ else if .Values.existingSecret }}{{ .Values.existingSecret }}{{ else if and .Values.global (and .Values.global.postgresql .Values.global.postgresql.secretName) }}{{ .Values.global.postgresql.secretName }}{{ else }}{{ .Release.Name }}-secret{{ end }}
+                  key: {{ default "postgres-password" (and .Values.global (and .Values.global.postgresql (and .Values.global.postgresql.secretKeys .Values.global.postgresql.secretKeys.passwordKey))) }}
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: PGPORT
+              value: {{ default 5432 (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.port)) | quote }}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: HEADLESS_SERVICE_NAME
+              value: {{ printf "%s-citus-worker-hl" .Release.Name | quote }}
+            - name: COORDINATOR_HOST
+              value: {{ if .Values.coordinatorHost }}{{ .Values.coordinatorHost | quote }}{{ else }}{{ printf "%s-citus-coordinator" .Release.Name | quote }}{{ end }}
+          {{- if .Values.registration.enabled }}
+          lifecycle:
+            postStart:
+              exec:
+                command:
+                  - /bin/sh
+                  - -c
+                  - "nohup /scripts/register.sh > /tmp/citus-register.log 2>&1 &"
+          {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+            {{- if .Values.registration.enabled }}
+            - name: registration-script
+              mountPath: /scripts
+              readOnly: true
+            {{- end }}
+          startupProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.username)) }} -d {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.database)) }} -h 127.0.0.1 -p {{ default 5432 (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.port)) }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.username)) }} -d {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.database)) }} -h 127.0.0.1 -p {{ default 5432 (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.port)) }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.username)) }} -d {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.database)) }} -h 127.0.0.1 -p {{ default 5432 (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.port)) }}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        {{- if .Values.registration.enabled }}
+        - name: registration-script
+          configMap:
+            name: {{ .Release.Name }}-citus-worker-registration-script
+            defaultMode: 0755
+        {{- end }}
+        {{- if not .Values.persistence.enabled }}
+        - name: data
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- if or .Values.persistence.storageClass (and .Values.global (and .Values.global.openshift .Values.global.openshift.storageClass)) }}
+        storageClassName: {{ or .Values.persistence.storageClass .Values.global.openshift.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size | quote }}
+  {{- end }}

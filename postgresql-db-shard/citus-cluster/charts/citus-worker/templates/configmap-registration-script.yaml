@@ -1,0 +1,92 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-citus-worker-registration-script
+  labels:
+    app.kubernetes.io/name: citus-worker
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    citus.role: worker
+data:
+  register.sh: |
+    #!/bin/sh
+    set -e
+
+    LOG_PREFIX="[citus-register]"
+    echo "$LOG_PREFIX Starting Citus worker node self-registration process..."
+
+    NAMESPACE="${POD_NAMESPACE:-postgresql-dev}"
+    WORKER_FQDN="${HOSTNAME}.${HEADLESS_SERVICE_NAME}.${NAMESPACE}.svc.cluster.local"
+    COORDINATOR="${COORDINATOR_HOST}.${NAMESPACE}.svc.cluster.local"
+    PORT="${PGPORT:-5432}"
+    USER="${POSTGRES_USER:-postgres}"
+    DB="${POSTGRES_DB:-postgres}"
+    MAX_RETRIES={{ .Values.registration.maxRetries | default 30 }}
+    RETRY_INTERVAL={{ .Values.registration.retryInterval | default 5 }}
+
+    echo "$LOG_PREFIX Worker node FQDN: ${WORKER_FQDN}:${PORT}"
+    echo "$LOG_PREFIX Target Coordinator: ${COORDINATOR}:${PORT}"
+
+    # Wait for local postgres to accept connections
+    echo "$LOG_PREFIX Waiting for local worker PostgreSQL (${HOSTNAME}) to become ready..."
+    attempt=1
+    until pg_isready -h 127.0.0.1 -p "${PORT}" -U "${USER}" >/dev/null 2>&1; do
+      if [ "$attempt" -ge "$MAX_RETRIES" ]; then
+        echo "$LOG_PREFIX ERROR: Timed out waiting for local PostgreSQL after $attempt attempts."
+        exit 1
+      fi
+      echo "$LOG_PREFIX Attempt $attempt/$MAX_RETRIES: local PostgreSQL not ready yet. Retrying in ${RETRY_INTERVAL}s..."
+      sleep "${RETRY_INTERVAL}"
+      attempt=$((attempt + 1))
+    done
+    echo "$LOG_PREFIX Local PostgreSQL is up and accepting connections."
+
+    # Wait for coordinator postgres to accept connections
+    echo "$LOG_PREFIX Waiting for Citus coordinator (${COORDINATOR}) to become ready..."
+    attempt=1
+    until pg_isready -h "${COORDINATOR}" -p "${PORT}" -U "${USER}" >/dev/null 2>&1; do
+      if [ "$attempt" -ge "$MAX_RETRIES" ]; then
+        echo "$LOG_PREFIX ERROR: Timed out waiting for coordinator at ${COORDINATOR} after $attempt attempts."
+        exit 1
+      fi
+      echo "$LOG_PREFIX Attempt $attempt/$MAX_RETRIES: coordinator not ready yet. Retrying in ${RETRY_INTERVAL}s..."
+      sleep "${RETRY_INTERVAL}"
+      attempt=$((attempt + 1))
+    done
+    echo "$LOG_PREFIX Coordinator is up and accepting connections."
+
+    # Perform idempotent node registration on coordinator
+    echo "$LOG_PREFIX Executing node registration on coordinator..."
+    attempt=1
+    while [ "$attempt" -le "$MAX_RETRIES" ]; do
+      REGISTER_OUTPUT=$(PGPASSWORD="${POSTGRES_PASSWORD}" psql -h "${COORDINATOR}" -p "${PORT}" -U "${USER}" -d "${DB}" -t -A -c "
+      DO \$\$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_dist_node 
+          WHERE nodename = '${WORKER_FQDN}' AND nodeport = ${PORT}
+        ) THEN
+          PERFORM citus_add_node('${WORKER_FQDN}', ${PORT});
+          RAISE NOTICE 'Worker node %:% registered successfully.', '${WORKER_FQDN}', ${PORT};
+        ELSE
+          RAISE NOTICE 'Worker node %:% already registered in pg_dist_node.', '${WORKER_FQDN}', ${PORT};
+        END IF;
+      END \$\$;
+      " 2>&1)
+      STATUS=$?
+
+      if [ $STATUS -eq 0 ]; then
+        echo "$LOG_PREFIX Registration SUCCESS: $REGISTER_OUTPUT"
+        break
+      else
+        echo "$LOG_PREFIX Attempt $attempt/$MAX_RETRIES failed with status $STATUS: $REGISTER_OUTPUT"
+        if [ "$attempt" -ge "$MAX_RETRIES" ]; then
+          echo "$LOG_PREFIX ERROR: Failed to register worker node after $attempt attempts."
+          exit 1
+        fi
+        sleep "${RETRY_INTERVAL}"
+        attempt=$((attempt + 1))
+      fi
+    done
+
+    echo "$LOG_PREFIX Auto-registration finished successfully."

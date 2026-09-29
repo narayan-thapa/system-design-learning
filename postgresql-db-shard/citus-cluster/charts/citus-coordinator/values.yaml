@@ -1,0 +1,45 @@
+replicaCount: 1
+
+image:
+  repository: citusdata/citus
+  tag: "12.1"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5432
+
+serviceAccount:
+  create: false
+  name: ""
+
+podSecurityContext: {}
+  # fsGroup: 999
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  # OpenShift with anyuid SCC:
+  # runAsUser: 999
+  # runAsGroup: 999
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

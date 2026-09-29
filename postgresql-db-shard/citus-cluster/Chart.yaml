@@ -1,0 +1,21 @@
+apiVersion: v2
+name: citus-cluster
+description: Citus Distributed PostgreSQL Cluster Umbrella Chart for OpenShift
+type: application
+version: 0.1.0
+appVersion: "12.1"
+keywords:
+  - postgresql
+  - citus
+  - sharding
+  - openshift
+  - database
+maintainers:
+  - name: Platform Architecture Team
+dependencies:
+  - name: citus-coordinator
+    version: 0.1.0
+    repository: "file://charts/citus-coordinator"
+  - name: citus-worker
+    version: 0.1.0
+    repository: "file://charts/citus-worker"

@@ -1,0 +1,10 @@
+apiVersion: v2
+name: citus-coordinator
+description: Citus Coordinator Service Chart for OpenShift
+type: application
+version: 0.1.0
+appVersion: "12.1"
+keywords:
+  - citus-coordinator
+  - postgresql
+  - openshift

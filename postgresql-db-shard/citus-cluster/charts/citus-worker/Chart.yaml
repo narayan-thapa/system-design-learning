@@ -1,0 +1,11 @@
+apiVersion: v2
+name: citus-worker
+description: Citus Worker Service Chart for OpenShift
+type: application
+version: 0.1.0
+appVersion: "12.1"
+keywords:
+  - citus-worker
+  - postgresql
+  - sharding
+  - openshift

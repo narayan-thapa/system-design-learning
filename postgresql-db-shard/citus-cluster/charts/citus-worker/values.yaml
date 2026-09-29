@@ -1,0 +1,49 @@
+replicaCount: 3
+
+image:
+  repository: citusdata/citus
+  tag: "12.1"
+  pullPolicy: IfNotPresent
+
+serviceAccount:
+  create: false
+  name: ""
+
+# If coordinator host is overridden
+coordinatorHost: ""
+
+registration:
+  enabled: true
+  maxRetries: 30
+  retryInterval: 5
+
+podSecurityContext: {}
+  # fsGroup: 999
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  # OpenShift with anyuid SCC:
+  # runAsUser: 999
+  # runAsGroup: 999
+
+resources:
+  limits:
+    cpu: 2000m
+    memory: 4Gi
+  requests:
+    cpu: 500m
+    memory: 1Gi
+
+persistence:
+  enabled: true
+  storageClass: ""
+  accessModes:
+    - ReadWriteOnce
+  size: 20Gi
+
+nodeSelector: {}
+tolerations: []
+affinity: {}

@@ -1,0 +1,36 @@
+================================================================================
+Citus Distributed PostgreSQL Cluster Deployed Successfully on OpenShift!
+================================================================================
+
+1. Cluster Overview:
+   - Namespace:       {{ .Release.Namespace }}
+   - Coordinator:     1 replica (StatefulSet)
+   - Worker Nodes:    {{ (index .Values "citus-worker").replicaCount | default 3 }} replicas (3 shards)
+   - ServiceAccount:  {{ if and .Values.global (and .Values.global.serviceAccount .Values.global.serviceAccount.name) }}{{ .Values.global.serviceAccount.name }}{{ else }}citus-sa{{ end }}
+
+2. OpenShift Security Context Constraint (SCC) Verification:
+   Ensure the dedicated ServiceAccount has been granted the 'anyuid' SCC:
+   $ oc adm policy add-scc-to-user anyuid -z {{ if and .Values.global (and .Values.global.serviceAccount .Values.global.serviceAccount.name) }}{{ .Values.global.serviceAccount.name }}{{ else }}citus-sa{{ end }} -n {{ .Release.Namespace }}
+
+3. Pod Status:
+   Check that all coordinator and worker pods are running:
+   $ oc get pods -n {{ .Release.Namespace }} -l 'app.kubernetes.io/instance={{ .Release.Name }}'
+
+4. Verify Auto-Registration & Shard Distribution:
+   Connect to the coordinator pod and verify all 3 workers are registered in pg_dist_node:
+   $ oc exec -it {{ .Release.Name }}-citus-coordinator-0 -n {{ .Release.Namespace }} -- \
+       psql -U {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.username)) }} -c "SELECT nodeid, nodename, nodeport, isactive FROM pg_dist_node;"
+
+5. Connect to Citus Coordinator (Interactive psql):
+   $ oc exec -it {{ .Release.Name }}-citus-coordinator-0 -n {{ .Release.Namespace }} -- \
+       psql -U {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.username)) }} -d {{ default "postgres" (and .Values.global (and .Values.global.postgresql .Values.global.postgresql.database)) }}
+
+6. Troubleshooting & Diagnostics:
+   - Worker Registration Logs:
+     $ oc exec -it {{ .Release.Name }}-citus-worker-0 -n {{ .Release.Namespace }} -- cat /tmp/citus-register.log
+   - Inter-Node Network Connectivity Test:
+     $ oc exec -it {{ .Release.Name }}-citus-coordinator-0 -n {{ .Release.Namespace }} -- \
+         pg_isready -h {{ .Release.Name }}-citus-worker-0.{{ .Release.Name }}-citus-worker-hl.{{ .Release.Namespace }}.svc.cluster.local
+   - OpenShift Pod Events / SCC Mismatch Check:
+     $ oc describe pod {{ .Release.Name }}-citus-coordinator-0 -n {{ .Release.Namespace }}
+================================================================================
