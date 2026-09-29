@@ -1,5 +1,3 @@
-# Citus Distributed PostgreSQL Cluster Umbrella Chart Values
-# Designed for OpenShift Container Platform
 
 global:
   # Target namespace on OpenShift
@@ -16,7 +14,7 @@ global:
 
   image:
     repository: citusdata/citus
-    tag: "12.1"
+    tag: "14.2-alpine"
     pullPolicy: IfNotPresent
 
   serviceAccount:
